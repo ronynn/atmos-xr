@@ -51,6 +51,7 @@ public class MyWallpaperService extends WallpaperService {
                     
                     // Load index.html from assets.
                     webView.loadUrl("file:///android_asset/index.html");
+                    webView.loadUrl("javascript:startVanta();");
                 }
             });
         }
