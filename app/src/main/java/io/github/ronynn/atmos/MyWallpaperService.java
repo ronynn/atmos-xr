@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -28,17 +29,27 @@ public class MyWallpaperService extends WallpaperService {
         };
 
         public MyEngine() {
-            // Initialize WebView on the main thread
             Handler mainHandler = new Handler(Looper.getMainLooper());
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     webView = new WebView(MyWallpaperService.this);
+                    // Apply all required settings
                     webView.getSettings().setJavaScriptEnabled(true);
-                    webView.getSettings().setDomStorageEnabled(true);
-                    // Optionally allow local file access if needed
                     webView.getSettings().setAllowFileAccess(true);
+                    webView.getSettings().setAllowContentAccess(true);
+                    webView.getSettings().setAllowFileAccessFromFileURLs(true);
+                    webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+                    webView.getSettings().setDomStorageEnabled(true);
+                    
+                    // Force hardware acceleration
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                    
+                    // Set clients to help with debugging/logging.
                     webView.setWebViewClient(new WebViewClient());
+                    webView.setWebChromeClient(new WebChromeClient());
+                    
+                    // Load index.html from assets.
                     webView.loadUrl("file:///android_asset/index.html");
                 }
             });
@@ -50,7 +61,6 @@ public class MyWallpaperService extends WallpaperService {
             try {
                 canvas = holder.lockCanvas();
                 if (canvas != null && webView != null) {
-                    // Measure and layout the WebView to match the canvas dimensions
                     int width = canvas.getWidth();
                     int height = canvas.getHeight();
                     webView.measure(
@@ -58,7 +68,6 @@ public class MyWallpaperService extends WallpaperService {
                         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
                     );
                     webView.layout(0, 0, width, height);
-                    // Draw the WebView's current content into the canvas
                     webView.draw(canvas);
                 }
             } finally {
@@ -66,7 +75,7 @@ public class MyWallpaperService extends WallpaperService {
                     holder.unlockCanvasAndPost(canvas);
                 }
             }
-            // Schedule next frame (approx. 30 FPS)
+            // Schedule the next frame (about 30 FPS)
             handler.postDelayed(drawRunnable, 33);
         }
 
