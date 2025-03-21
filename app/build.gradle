@@ -22,6 +22,10 @@ android {
         }
     }
     
+    dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
+    
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
         includeInApk = false
