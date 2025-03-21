@@ -2,109 +2,117 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Virtual Clouds</title>
+  <title>WebGL & Three.js Demo</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background: black; /* Default background */
-      color: white;
-      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      background: #000;
     }
-
-    #vanta-bg {
+    .demo {
+      flex: 1;
+      position: relative;
+    }
+    canvas {
       width: 100%;
       height: 100%;
-    }
-
-    .floating-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-      padding: 10px 15px;
-      background: rgba(0,0,0,0.1);
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
       display: block;
     }
-
-    #debug-log {
-      position: fixed;
+    .info {
+      position: absolute;
       top: 10px;
       left: 10px;
-      background: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 10px;
-      font-size: 14px;
-      max-width: 90%;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      border-radius: 5px;
-      z-index: 9999;
+      font-family: sans-serif;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 3px;
     }
   </style>
 </head>
 <body>
-  <div id="debug-log">Initializing...</div>
-  <div id="vanta-bg"></div>
-  <button class="floating-button" id="testButton">Debug</button>
+  <!-- Pure WebGL Demo -->
+  <div id="webglDemo" class="demo">
+    <div class="info">Pure WebGL Demo</div>
+    <canvas id="webglCanvas"></canvas>
+  </div>
+
+  <!-- Three.js Demo -->
+  <div id="threeDemo" class="demo">
+    <div class="info">Three.js Demo</div>
+    <canvas id="threeCanvas"></canvas>
+  </div>
 
   <script>
-    function logMessage(msg) {
-      let debugLog = document.getElementById("debug-log");
-      debugLog.innerHTML += msg + "<br>";
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-      logMessage("Page Loaded");
-
-      if (!window.THREE) {
-        logMessage("Error: Three.js not loaded!");
-      } else {
-        logMessage("Three.js loaded successfully");
-      }
-
-      if (!window.VANTA) {
-        logMessage("Error: Vanta.js not loaded!");
-      } else {
-        logMessage("Vanta.js loaded successfully");
-      }
-
-      let canvas = document.createElement("canvas");
-      let gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    // Pure WebGL Demo: animate clear color
+    (function() {
+      const canvas = document.getElementById('webglCanvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (!gl) {
-        logMessage("Error: WebGL is NOT supported!");
-      } else {
-        logMessage("WebGL is working.");
+        console.error('WebGL not supported');
+        return;
       }
-    });
+      function resizeCanvas() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      let hue = 0;
+      function render() {
+        hue += 0.01;
+        const r = Math.abs(Math.sin(hue));
+        const g = Math.abs(Math.sin(hue + 2));
+        const b = Math.abs(Math.sin(hue + 4));
+        gl.clearColor(r, g, b, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        requestAnimationFrame(render);
+      }
+      render();
+    })();
   </script>
 
-  <script src="three.min.js" onload="logMessage('Three.js script loaded')" onerror="logMessage('Error loading Three.js')"></script>
-  <script src="vanta.clouds.min.js" onload="logMessage('Vanta.js script loaded')" onerror="logMessage('Error loading Vanta.js')"></script>
-
+  <!-- Include Three.js -->
+  <script src="three.min.js"></script>
   <script>
-    function startVanta() {
-      if (window.VANTA && window.VANTA.CLOUDS) {
-        logMessage("Starting Vanta effect...");
-        VANTA.CLOUDS({
-          el: "#vanta-bg",
-          skyColor: "#2C3E50",
-          cloudColor: "#666666",
-          speed: 0.6,
-          zoom: 1.0
-        });
-      } else {
-        logMessage("Vanta.js is missing or not initialized.");
-      }
-    }
+    // Three.js Demo: rotating cube
+    (function() {
+      const canvas = document.getElementById('threeCanvas');
+      const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
-    setTimeout(startVanta, 2000); // Wait 2 seconds before initializing
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      // Create a cube
+      const geometry = new THREE.BoxGeometry();
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+
+      function resize() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+      window.addEventListener('resize', resize);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
   </script>
 </body>
 </html>
