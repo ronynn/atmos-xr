@@ -9,6 +9,9 @@
       padding: 0;
       height: 100%;
       overflow: hidden;
+      background: black; /* Default background */
+      color: white;
+      font-family: Arial, sans-serif;
     }
 
     #vanta-bg {
@@ -27,139 +30,81 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      display:block;
+      display: block;
+    }
+
+    #debug-log {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 10px;
+      font-size: 14px;
+      max-width: 90%;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      border-radius: 5px;
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
+  <div id="debug-log">Initializing...</div>
   <div id="vanta-bg"></div>
   <button class="floating-button" id="testButton">Debug</button>
 
-  <script src="three.min.js"></script>
-  <script src="vanta.clouds.min.js"></script>
+  <script>
+    function logMessage(msg) {
+      let debugLog = document.getElementById("debug-log");
+      debugLog.innerHTML += msg + "<br>";
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      logMessage("Page Loaded");
+
+      if (!window.THREE) {
+        logMessage("Error: Three.js not loaded!");
+      } else {
+        logMessage("Three.js loaded successfully");
+      }
+
+      if (!window.VANTA) {
+        logMessage("Error: Vanta.js not loaded!");
+      } else {
+        logMessage("Vanta.js loaded successfully");
+      }
+
+      let canvas = document.createElement("canvas");
+      let gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!gl) {
+        logMessage("Error: WebGL is NOT supported!");
+      } else {
+        logMessage("WebGL is working.");
+      }
+    });
+  </script>
+
+  <script src="three.min.js" onload="logMessage('Three.js script loaded')" onerror="logMessage('Error loading Three.js')"></script>
+  <script src="vanta.clouds.min.js" onload="logMessage('Vanta.js script loaded')" onerror="logMessage('Error loading Vanta.js')"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      let vantaEffect;
-      let testHour = null;
-
-      
-      
-
-      // Muted, natural-looking keyframes for color transitions
-      const keyframes = [
-        { hour: 0,  skyColor: "#0A1A2F", cloudColor: "#333333" }, // Midnight (Dark Blue, Dark Gray Clouds)
-        { hour: 6,  skyColor: "#2C3E50", cloudColor: "#666666" }, // Early Dawn (Cool Blue-Gray)
-        { hour: 9,  skyColor: "#506D89", cloudColor: "#888888" }, // Morning (Soft Blue-Gray)
-        { hour: 12, skyColor: "#6B8BA4", cloudColor: "#AAAAAA" }, // Noon (Mellow Blue, Gentle Gray Clouds)
-        { hour: 15, skyColor: "#5C8098", cloudColor: "#999999" }, // Afternoon (Subtle Muted Blue)
-        { hour: 18, skyColor: "#2C3E50", cloudColor: "#999999" }, // Sunset (Warm Peach Glow)
-        { hour: 21, skyColor: "#2F3542", cloudColor: "#555555" }, // Evening (Deep Blue-Gray)
-        { hour: 24, skyColor: "#0A1A2F", cloudColor: "#333333" }  // Midnight (Back to Dark)
-      ];
-
-      
-      
-
-      function hexToRgb(hex) {
-        hex = hex.replace("#", "");
-        if (hex.length === 3) {
-          hex = hex.split("").map(h => h + h).join("");
-        }
-        const bigint = parseInt(hex, 16);
-        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
-      }
-
-      
-      
-
-      function rgbToHex(rgb) {
-        const toHex = c => ("0" + c.toString(16)).slice(-2);
-        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-      }
-
-      
-      
-
-      function lerp(a, b, t) {
-        return a + (b - a) * t;
-      }
-
-      
-      
-
-      function interpolateColor(hex1, hex2, t) {
-        const c1 = hexToRgb(hex1);
-        const c2 = hexToRgb(hex2);
-        return rgbToHex({
-          r: Math.round(lerp(c1.r, c2.r, t)),
-          g: Math.round(lerp(c1.g, c2.g, t)),
-          b: Math.round(lerp(c1.b, c2.b, t))
-        });
-      }
-
-      
-      
-
-      function getColorsForHour(hour) {
-        let startKeyframe, endKeyframe;
-        for (let i = 0; i < keyframes.length - 1; i++) {
-          if (hour >= keyframes[i].hour && hour <= keyframes[i + 1].hour) {
-            startKeyframe = keyframes[i];
-            endKeyframe = keyframes[i + 1];
-            break;
-          }
-        }
-        if (!startKeyframe || !endKeyframe) {
-          startKeyframe = keyframes[0];
-          endKeyframe = keyframes[1];
-        }
-        const t = (hour - startKeyframe.hour) / (endKeyframe.hour - startKeyframe.hour);
-        return {
-          skyColor: interpolateColor(startKeyframe.skyColor, endKeyframe.skyColor, t),
-          cloudColor: interpolateColor(startKeyframe.cloudColor, endKeyframe.cloudColor, t)
-        };
-      }
-
-      
-      
-
-      function updateVanta() {
-        let now = new Date();
-        let currentHour = testHour !== null ? testHour : now.getHours() + now.getMinutes() / 60;
-        const colors = getColorsForHour(currentHour);
-
-        if (vantaEffect) vantaEffect.destroy();
-
-        vantaEffect = VANTA.CLOUDS({
+    function startVanta() {
+      if (window.VANTA && window.VANTA.CLOUDS) {
+        logMessage("Starting Vanta effect...");
+        VANTA.CLOUDS({
           el: "#vanta-bg",
-          skyColor: colors.skyColor,
-          cloudColor: colors.cloudColor,
+          skyColor: "#2C3E50",
+          cloudColor: "#666666",
           speed: 0.6,
           zoom: 1.0
         });
+      } else {
+        logMessage("Vanta.js is missing or not initialized.");
       }
+    }
 
-      
-      
-
-      updateVanta();
-
-      
-      
-
-      setInterval(() => {
-        if (testHour === null) updateVanta();
-      }, 60000);
-
-      
-      
-
-      document.getElementById("testButton").addEventListener("click", () => {
-        testHour = testHour === null ? Math.floor(new Date().getHours()) : (testHour + 1) % 24;
-        updateVanta();
-      });
-    });
+    setTimeout(startVanta, 2000); // Wait 2 seconds before initializing
   </script>
 </body>
 </html>

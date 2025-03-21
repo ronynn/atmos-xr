@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Clouds</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #vanta-bg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .floating-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      padding: 10px 15px;
+      background: rgba(0,0,0,0.1);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display:block;
+    }
+  </style>
+</head>
+<body>
+  <div id="vanta-bg"></div>
+  <button class="floating-button" id="testButton">Debug</button>
+
+  <script src="three.min.js"></script>
+  <script src="vanta.clouds.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      let vantaEffect;
+      let testHour = null;
+
+      
+      
+
+      // Muted, natural-looking keyframes for color transitions
+      const keyframes = [
+        { hour: 0,  skyColor: "#0A1A2F", cloudColor: "#333333" }, // Midnight (Dark Blue, Dark Gray Clouds)
+        { hour: 6,  skyColor: "#2C3E50", cloudColor: "#666666" }, // Early Dawn (Cool Blue-Gray)
+        { hour: 9,  skyColor: "#506D89", cloudColor: "#888888" }, // Morning (Soft Blue-Gray)
+        { hour: 12, skyColor: "#6B8BA4", cloudColor: "#AAAAAA" }, // Noon (Mellow Blue, Gentle Gray Clouds)
+        { hour: 15, skyColor: "#5C8098", cloudColor: "#999999" }, // Afternoon (Subtle Muted Blue)
+        { hour: 18, skyColor: "#2C3E50", cloudColor: "#999999" }, // Sunset (Warm Peach Glow)
+        { hour: 21, skyColor: "#2F3542", cloudColor: "#555555" }, // Evening (Deep Blue-Gray)
+        { hour: 24, skyColor: "#0A1A2F", cloudColor: "#333333" }  // Midnight (Back to Dark)
+      ];
+
+      
+      
+
+      function hexToRgb(hex) {
+        hex = hex.replace("#", "");
+        if (hex.length === 3) {
+          hex = hex.split("").map(h => h + h).join("");
+        }
+        const bigint = parseInt(hex, 16);
+        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+      }
+
+      
+      
+
+      function rgbToHex(rgb) {
+        const toHex = c => ("0" + c.toString(16)).slice(-2);
+        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+      }
+
+      
+      
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      
+      
+
+      function interpolateColor(hex1, hex2, t) {
+        const c1 = hexToRgb(hex1);
+        const c2 = hexToRgb(hex2);
+        return rgbToHex({
+          r: Math.round(lerp(c1.r, c2.r, t)),
+          g: Math.round(lerp(c1.g, c2.g, t)),
+          b: Math.round(lerp(c1.b, c2.b, t))
+        });
+      }
+
+      
+      
+
+      function getColorsForHour(hour) {
+        let startKeyframe, endKeyframe;
+        for (let i = 0; i < keyframes.length - 1; i++) {
+          if (hour >= keyframes[i].hour && hour <= keyframes[i + 1].hour) {
+            startKeyframe = keyframes[i];
+            endKeyframe = keyframes[i + 1];
+            break;
+          }
+        }
+        if (!startKeyframe || !endKeyframe) {
+          startKeyframe = keyframes[0];
+          endKeyframe = keyframes[1];
+        }
+        const t = (hour - startKeyframe.hour) / (endKeyframe.hour - startKeyframe.hour);
+        return {
+          skyColor: interpolateColor(startKeyframe.skyColor, endKeyframe.skyColor, t),
+          cloudColor: interpolateColor(startKeyframe.cloudColor, endKeyframe.cloudColor, t)
+        };
+      }
+
+      
+      
+
+      function updateVanta() {
+        let now = new Date();
+        let currentHour = testHour !== null ? testHour : now.getHours() + now.getMinutes() / 60;
+        const colors = getColorsForHour(currentHour);
+
+        if (vantaEffect) vantaEffect.destroy();
+
+        vantaEffect = VANTA.CLOUDS({
+          el: "#vanta-bg",
+          skyColor: colors.skyColor,
+          cloudColor: colors.cloudColor,
+          speed: 0.6,
+          zoom: 1.0
+        });
+      }
+
+      
+      
+
+      updateVanta();
+
+      
+      
+
+      setInterval(() => {
+        if (testHour === null) updateVanta();
+      }, 60000);
+
+      
+      
+
+      document.getElementById("testButton").addEventListener("click", () => {
+        testHour = testHour === null ? Math.floor(new Date().getHours()) : (testHour + 1) % 24;
+        updateVanta();
+      });
+    });
+  </script>
+</body>
+</html>
