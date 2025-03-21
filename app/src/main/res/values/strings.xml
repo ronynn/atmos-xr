@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Atmos XR</string>
-    <string name="app_description">The Power of the clouds in your palms. Set the livewallpaper from your device wallpaper picker.</string>
-    <string name="github_url">https://github.com/ronynn/atmos-xr</string>
     <string name="wallpaper_description">Live Wallpaper Service</string>
 </resources>

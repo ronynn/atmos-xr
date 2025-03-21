@@ -19,7 +19,6 @@ public class MyWallpaperService extends WallpaperService {
         private WebView webView;
 
         public MyEngine() {
-            // Ensure that the WebView is initialized on the main thread
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(new Runnable() {
                 @Override
@@ -28,7 +27,6 @@ public class MyWallpaperService extends WallpaperService {
                     webView.getSettings().setJavaScriptEnabled(true);
                     webView.getSettings().setDomStorageEnabled(true);
                     webView.setWebViewClient(new WebViewClient());
-                    // Load your fullpage HTML animation from assets
                     webView.loadUrl("file:///android_asset/index.html");
                 }
             });
