@@ -3,14 +3,14 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 34
     
-    namespace "io.github.ronynn.karui"
+    namespace "io.github.ronynn.atmos"
 
     defaultConfig {
-        applicationId "io.github.ronynn.karui"
+        applicationId "io.github.ronynn.atmos"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 2
-        versionName "1.1"
+        versionCode 1
+        versionName "1.0"
     }
     
     signingConfigs {
